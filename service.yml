@@ -79,7 +79,7 @@ helm:
   name: wodby
   source: oci://registry-1.docker.io/wodby/stateless
   chart: oci://registry-1.docker.io/wodby/stateless
-  version: 0.2.0
+  version: 0.2.1
   valueMappings:
     replicas: replicaCount
     nameOverride: nameOverride
