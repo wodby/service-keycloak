@@ -1,0 +1,145 @@
+name: keycloak
+title: Keycloak
+icon: keycloak
+type: service
+scalable: false
+
+labels:
+- keycloak
+- identity
+- authentication
+
+options:
+- version: '26.7'
+  tag: '26.7.3'
+  default: true
+
+endpoints:
+- name: keycloak
+  ports:
+  - name: http
+    number: 8080
+    protocol: http
+    main: true
+  - name: management
+    number: 9000
+    protocol: http
+    private: true
+
+tokens:
+- name: admin_username
+  value: admin
+- name: admin_password
+  generate:
+    regex: '[A-Za-z0-9!@#%_-]{32}'
+
+env:
+- name: KC_BOOTSTRAP_ADMIN_USERNAME
+  value: '{{admin_username}}'
+  secret: true
+- name: KC_BOOTSTRAP_ADMIN_PASSWORD
+  value: '{{admin_password}}'
+  secret: true
+- name: KC_DB
+  value: postgres
+- name: KC_HTTP_ENABLED
+  value: 'true'
+- name: KC_PROXY_HEADERS
+  value: xforwarded
+- name: KC_HOSTNAME
+  value: '{{service.url}}'
+- name: KC_HEALTH_ENABLED
+  value: 'true'
+- name: KC_METRICS_ENABLED
+  value: 'true'
+
+links:
+- name: postgres
+  title: PostgreSQL
+  required: true
+  env:
+  - name: KC_DB_URL_HOST
+    value: '{{link.database.host}}'
+  - name: KC_DB_URL_PORT
+    value: '{{link.database.port}}'
+  - name: KC_DB_URL_DATABASE
+    value: '{{link.database.db.name}}'
+  - name: KC_DB_USERNAME
+    value: '{{link.database.user.name}}'
+    secret: true
+  - name: KC_DB_PASSWORD
+    value: '{{link.database.user.password}}'
+    secret: true
+  selectors:
+  - type: db
+    labels:
+    - postgres
+
+helm:
+  name: wodby
+  source: oci://registry-1.docker.io/wodby/stateless
+  chart: oci://registry-1.docker.io/wodby/stateless
+  version: 0.2.0
+  valueMappings:
+    replicas: replicaCount
+    nameOverride: nameOverride
+    fullnameOverride: fullnameOverride
+    serviceAccountName: serviceAccount.name
+    serviceAccountCreate: serviceAccount.create
+    strategy: strategy.type
+    minReady: minReadySeconds
+    progressDeadline: progressDeadlineSeconds
+    shutdownGracePeriod: terminationGracePeriodSeconds
+  values:
+  - name: containerName
+    value: keycloak
+  - name: args
+    value:
+    - start
+  - name: containerPorts
+    value:
+    - name: http
+      containerPort: 8080
+      protocol: TCP
+    - name: management
+      containerPort: 9000
+      protocol: TCP
+  - name: startupProbe
+    value:
+      httpGet:
+        path: /health/started
+        port: management
+      failureThreshold: 30
+      periodSeconds: 10
+  - name: readinessProbe
+    value:
+      httpGet:
+        path: /health/ready
+        port: management
+      periodSeconds: 10
+  - name: livenessProbe
+    value:
+      httpGet:
+        path: /health/live
+        port: management
+      initialDelaySeconds: 30
+      periodSeconds: 20
+
+workloads:
+- name: main
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: '{{helm.release}}'
+  kind: deployment
+  primary: true
+  helm:
+    labels: podLabels
+    annotations: podAnnotations
+    volumes: extraVolumes
+  containers:
+  - name: keycloak
+    image: quay.io/keycloak/keycloak
+    helm:
+      resources: resources
+      env: envVars
+      mounts: extraVolumeMounts
