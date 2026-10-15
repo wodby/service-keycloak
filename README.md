@@ -19,7 +19,7 @@ configuration for Keycloak.
 | --- | --- |
 | Service name | `keycloak` |
 | Type | Application service |
-| Versions | `26.7` by default |
+| Versions | `26.8` by default |
 | Workloads | `main` (Deployment, primary) |
 | Containers | `keycloak` using `quay.io/keycloak/keycloak` |
 | Endpoints | `keycloak`: HTTP 8080 (main), HTTP 9000 |
