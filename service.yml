@@ -12,7 +12,7 @@ labels:
 
 options:
 - version: '26.8'
-  tag: '26.8.1'
+  tag: '26.8.2'
   default: true
 
 endpoints:
