@@ -140,6 +140,12 @@ workloads:
   containers:
   - name: keycloak
     image: quay.io/keycloak/keycloak
+    resources:
+      request:
+        cpu: 370
+        memory: 384
+      limit:
+        memory: 1792
     helm:
       resources: resources
       env: envVars
