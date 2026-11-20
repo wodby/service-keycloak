@@ -13,6 +13,7 @@ labels:
 options:
 - version: '26.8'
   tag: '26.8.2'
+  digest: sha256:7e66a96e4739239070aeaf72e4c5decf0f7f682cfc725b9f7ea2b336eaba38b3
   default: true
 
 endpoints:
